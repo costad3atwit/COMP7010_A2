@@ -1,4 +1,4 @@
-import random, copy
+import random, copy, math
 from collections import Counter
 
 random.seed(1234)
@@ -90,14 +90,41 @@ G = {
     'G': Counter({'A':0, 'B':0, 'C':0, 'D': 0, 'E': 1, 'F': 1, 'G': 0, 'H': 1}),
     'H': Counter({'A':0, 'B':0, 'C':0, 'D': 0, 'E': 1, 'F': 1, 'G': 1, 'H': 0}),
 }
-def karger(G:any)->int:
+def karger(G: dict) -> int:
     CG = copy.deepcopy(G)
-    #alg goes here
+    for vertex in CG:
+        CG[vertex] = +CG[vertex] #strip zero entries
 
-    return CG
+    while len(CG) > 2:
+        #each undirected edge listed once with how many copies (parallel edges) it has
+        edges = [
+            (endpoint_a, endpoint_b)
+            for endpoint_a in CG
+            for endpoint_b in CG[endpoint_a]
+            if endpoint_a < endpoint_b
+        ]
+        multiplicities = [CG[endpoint_a][endpoint_b] for endpoint_a, endpoint_b in edges]
+        keep, absorbed = random.choices(edges, weights=multiplicities)[0]
 
-def mincut(r:int)->int:
-    pass
+        #merge the absorbed vertex into the kept vertex
+        for neighbor, multiplicity in CG[absorbed].items():
+            if neighbor != keep:
+                CG[keep][neighbor] += multiplicity
+                CG[neighbor][keep] += multiplicity
+            del CG[neighbor][absorbed]   # when neighbor == keep we would create a self-loop. This removes it
+        del CG[absorbed]
+
+    # Edges remaining are the cut
+    remaining_vertex = next(iter(CG))
+    return sum(CG[remaining_vertex].values())
+
+def mincut(r: int) -> int:
+    return min(karger(G) for _ in range(r))
+
+if __name__ == '__main__':
+    n = len(G)
+    runs = math.ceil(n * n * math.log(n)) #
+    print(f"Smallest cut found in {runs} runs: {mincut(runs)}") 
 
 #=============    A3 END    ==============
 
@@ -106,15 +133,26 @@ def mincut(r:int)->int:
 
 #B1.
 def test_quickselect():
-    for t in range(30):
+    for _ in range(30):
         A = [random.randint(-50, 50) for _ in range(random.randint(1, 25))]
         k = random.randint(1, len(A))  # k is 1-based
         want = sorted(A)[k-1]
         got = quickselect(A.copy(), k)
         assert got == want
 
-#not really a "test", just so counting comparisons runs with pytest
+#verify expected sorting behavior
 def test_quicksorts():
+    for _ in range(30):
+        A = [random.randint(-50, 50) for _ in range(random.randint(1, 25))]
+        want = sorted(A)
+        got = A.copy()
+        randQuicksort(got)
+        assert got == want
+
+#not really a "test", just so counting comparisons for graphs runs with pytest
+def test_time_quicksorts():
+    print()
+    print("Part B1 comparison counting")
     arr_100 = list(range(100))
     arr_250 = list(range(250))
     arr_500 = list(range(500))
@@ -141,22 +179,22 @@ def test_quicksorts():
     print(f"Mean_250 = {mean_250}")
     print(f"Mean_500 = {mean_500}")
     print(f"Mean_750 = {mean_750}")
-
-#TODO: Create plot with n on x axis and comparisons on y axis. Ploy deterministic count and randomized mean
-#TODO: Explain why deterministic curve is quadratic but randomized grows nlogn
+    #note: plots were created using excel and the terminal output of these print statements
 
 #B2.
 
-# def test_karger_prob():
-#     res = {}
-#     #count min-cut results from 500 trials
-#     for _ in range(500):
-#         run = mincut(G=G)
-#         if run in res:
-#             res[run] = res[run] + 1
-#         else:
-#             res[run] = 1
-#     for i in sorted(res):
-#         print(f"Trials with min-cut = {i}: {res[i]}")
-#     print(f"Empirical success rate: {(res[2]/(500))*100}%")
-#     print(f"Theoretical success rate: {2/(8*(8-1))}% (note this is the worst case guarantee, empirical rate should be greater or equal)")
+def test_karger_prob():
+    print()
+    print("Part B2 success rate testing")
+    results = {}
+    #count min-cut results from 500 trials
+    for _ in range(500):
+        run_res = karger(G=G)
+        if run_res in results:
+            results[run_res] = results[run_res] + 1
+        else:
+            results[run_res] = 1
+    for i in sorted(results):
+        print(f"Trials with min-cut = {i}: {results[i]}")
+    print(f"Empirical success rate: {(results[2]/(500))*100}%")
+    print(f"Theoretical success rate: {2/(8*(8-1))}% (=2/[n(n-1)])\n    (note this is the worst case guarantee, empirical rate should be greater or equal)")
