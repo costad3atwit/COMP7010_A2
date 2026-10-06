@@ -3,8 +3,6 @@ from collections import Counter
 
 random.seed(1234)
 
-
-
 #PART A
 
 #=============    A1    ==============
@@ -164,8 +162,9 @@ def test_time_quicksorts():
     det_comps.append(detQuicksort(arr=arr_250))
     det_comps.append(detQuicksort(arr=arr_500))
     det_comps.append(detQuicksort(arr=arr_750))
+    print("Deterministic Quicksort Comparison Counts, in order of n: [100,250,500,750]")
     for i in range(4):
-        print(f"Det_comps{i} = {det_comps[i]}")
+        print(f"Determinsitic Quicksort Comparisons {i} = {det_comps[i]}")
     for _ in range (30):
         rand_comps[100].append(randQuicksort(arr=arr_100))
         rand_comps[250].append(randQuicksort(arr=arr_250))
@@ -175,10 +174,10 @@ def test_time_quicksorts():
     mean_250 = sum(rand_comps[250]) / len(rand_comps[250])
     mean_500 = sum(rand_comps[500]) / len(rand_comps[500])
     mean_750 = sum(rand_comps[750]) / len(rand_comps[750])
-    print(f"Mean_100 = {mean_100}")
-    print(f"Mean_250 = {mean_250}")
-    print(f"Mean_500 = {mean_500}")
-    print(f"Mean_750 = {mean_750}")
+    print(f"Mean Comparison Count for Random Quicksort w/ n=100 = {mean_100}")
+    print(f"Mean Comparison Count for Random Quicksort w/ n=250 = {mean_250}")
+    print(f"Mean Comparison Count for Random Quicksort w/ n=500 = {mean_500}")
+    print(f"Mean Comparison Count for Random Quicksort w/ n=750 = {mean_750}")
     #note: plots were created using excel and the terminal output of these print statements
 
 #B2.
